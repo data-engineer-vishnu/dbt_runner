@@ -1,0 +1,12 @@
+# Authentication uses the Cloud Run Job service identity through Application
+# Default Credentials. Do not set GOOGLE_APPLICATION_CREDENTIALS in Cloud Run.
+dbt_runner:
+  target: "{{ env_var('DBT_TARGET', 'cloud_run') }}"
+  outputs:
+    cloud_run:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('GCP_PROJECT_ID') }}"
+      dataset: "{{ env_var('DBT_BIGQUERY_DATASET') }}"
+      location: "{{ env_var('DBT_BIGQUERY_LOCATION', 'US') }}"
+      threads: "{{ env_var('DBT_THREADS', '4') | int }}"

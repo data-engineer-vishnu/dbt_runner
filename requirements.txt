@@ -1,0 +1,3 @@
+# Keep dbt-core and the BigQuery adapter on the same compatible release line.
+# Pin this to an exact, tested version before production releases.
+dbt-bigquery>=1.9,<2.0

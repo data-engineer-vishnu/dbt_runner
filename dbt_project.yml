@@ -1,0 +1,14 @@
+name: dbt_runner
+version: "1.0.0"
+config-version: 2
+
+profile: dbt_runner
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  dbt_runner:
+    +materialized: view

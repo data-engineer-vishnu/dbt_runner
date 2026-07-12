@@ -1,0 +1,11 @@
+.git
+.gitignore
+.env
+.env.*
+target/
+logs/
+dbt_packages/
+packages-lock.yml
+*.py[cod]
+__pycache__/
+README.md

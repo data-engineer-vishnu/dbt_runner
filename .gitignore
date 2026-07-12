@@ -1,0 +1,8 @@
+.env
+.env.*
+target/
+logs/
+dbt_packages/
+packages-lock.yml
+*.py[cod]
+__pycache__/
