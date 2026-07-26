@@ -1,6 +1,6 @@
 # Authentication uses the Cloud Run Job service identity through Application
 # Default Credentials. Do not set GOOGLE_APPLICATION_CREDENTIALS in Cloud Run.
-dbt_runner:
+vis_dbt:
   target: "{{ env_var('DBT_TARGET', 'cloud_run') }}"
   outputs:
     cloud_run:

@@ -13,13 +13,17 @@ RUN groupadd --system dbt && useradd --system --gid dbt --create-home dbt
 COPY requirements.txt ./
 RUN pip install --requirement requirements.txt
 
-# Install dbt packages while building so job executions do not need network access
-# to the dbt package registry.
-COPY dbt_project.yml packages.yml ./
-RUN dbt deps --project-dir /app
+# Install dbt packages while building so job executions do not need network
+# access to the dbt package registry. Copy just the project/package manifests
+# first so this layer only rebuilds when dependencies actually change.
+# packages.yml is optional (the glob is a no-op if it doesn't exist yet).
+COPY vis_dbt/dbt_project.yml vis_dbt/packages.yml* ./
+RUN if [ -f packages.yml ]; then dbt deps --project-dir /app; fi
 
-COPY models ./models
-COPY macros ./macros
+# Copy the rest of the dbt project (models, macros, seeds, snapshots, tests,
+# analyses, etc.) from the vis_dbt/ subfolder.
+COPY vis_dbt/ ./
+
 COPY profiles ./profiles
 COPY docker/entrypoint.sh /usr/local/bin/dbt-entrypoint
 
@@ -28,5 +32,7 @@ RUN chmod 0555 /usr/local/bin/dbt-entrypoint \
 
 USER dbt
 
+# Cloud Run Job / Airflow overrides append arguments here, e.g.:
+#   ["run", "--select", "tag:daily", "--vars", "{execution_date: 2026-07-25}"]
 ENTRYPOINT ["/usr/local/bin/dbt-entrypoint"]
 CMD ["build"]
