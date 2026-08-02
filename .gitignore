@@ -7,3 +7,4 @@ dbt_packages/
 packages-lock.yml
 *.py[cod]
 __pycache__/
+terraform/.terraform/
