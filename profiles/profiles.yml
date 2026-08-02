@@ -8,5 +8,5 @@ vis_dbt:
       method: oauth
       project: "{{ env_var('GCP_PROJECT_ID') }}"
       dataset: "{{ env_var('DBT_BIGQUERY_DATASET') }}"
-      location: "{{ env_var('DBT_BIGQUERY_LOCATION', 'US') }}"
+      location: "{{ env_var('DBT_BIGQUERY_LOCATION', 'asia-southeast1') }}"
       threads: "{{ env_var('DBT_THREADS', '4') | int }}"
