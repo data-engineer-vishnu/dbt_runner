@@ -4,6 +4,8 @@ version: 2
 models:
   - name: my_first_dbt_model
     description: "A starter dbt model"
+    config:
+      tags: ["docker_test"]
     columns:
       - name: id
         description: "The primary key for this table"
@@ -18,4 +20,14 @@ models:
         description: "The primary key for this table"
         data_tests:
           - unique
+          - not_null
+
+  - name: my_third_dbt_model
+    description: "Adds the execution_date CLI var as a column alongside my_second_dbt_model's data"
+    columns:
+      - name: id
+        description: "The primary key for this table"
+      - name: execution_date
+        description: "The execution_date passed via --vars, or the run's start date if not supplied"
+        data_tests:
           - not_null

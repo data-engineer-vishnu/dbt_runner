@@ -1,0 +1,24 @@
+project_id = "analytics-prod"
+region     = "us-central1"
+
+job_name           = "dbt-runner"
+service_account_id = "dbt-runner"
+
+# Build and push the image from this repo's Dockerfile first, e.g.:
+#   gcloud builds submit --tag us-central1-docker.pkg.dev/analytics-prod/dbt-images/dbt-runner:latest
+image = "us-central1-docker.pkg.dev/analytics-prod/dbt-images/dbt-runner:latest"
+
+bigquery_dataset  = "analytics"
+bigquery_location = "US"
+# source_dataset_ids = ["raw_events", "raw_crm"]
+
+dbt_threads = 4
+dbt_target  = "cloud_run"
+
+cpu          = "1"
+memory       = "2Gi"
+task_timeout = "3600s"
+max_retries  = 0
+
+# Grant the Composer/Airflow environment SA permission to trigger executions.
+composer_service_account = "composer-env@analytics-prod.iam.gserviceaccount.com"
