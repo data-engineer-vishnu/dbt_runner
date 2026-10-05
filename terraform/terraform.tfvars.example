@@ -22,3 +22,28 @@ max_retries  = 0
 
 # Grant the Composer/Airflow environment SA permission to trigger executions.
 composer_service_account = "composer-env@analytics-prod.iam.gserviceaccount.com"
+
+# --- BigQuery dynamic column masking (terraform/masking.tf) -----------------
+# Grantees use IAM v2 principal identifiers:
+#   user:            "principal://goog/subject/alice@example.com"
+#   group:           "principalSet://goog/group/analysts@example.com"
+#   service account: "principal://iam.googleapis.com/projects/-/serviceAccounts/sa@PROJECT.iam.gserviceaccount.com"
+# Principals in neither list get "Access Denied" on masked columns, even with
+# BigQuery dataViewer/dataOwner. The dbt runner SA is added to the raw list
+# automatically (grant_dbt_runner_raw_access = true).
+#
+# If you run dbt locally with your own Google account, add it to
+# masking_raw_grantees, otherwise downstream models (e.g. customer_copy) fail
+# with "does not have masked access or raw data access".
+create_masking_policies = true
+masking_masked_grantees = ["principalSet://goog/group/analysts@example.com"]
+masking_raw_grantees    = ["principalSet://goog/group/pii-readers@example.com"]
+# grant_dbt_runner_raw_access = true
+# masking_routine_dataset     = "analytics"  # defaults to bigquery_dataset
+#
+# Optional: replace the default policy set. Keys become `mask_policy` names in dbt YAML.
+# masking_policies = {
+#   asterisk = { routine = "mask_with_asterisk" }
+#   email    = { predefined_expression = "EMAIL_MASK" }
+#   nullify  = { predefined_expression = "ALWAYS_NULL", grantees = ["principalSet://goog/group/support@example.com"] }
+# }

@@ -114,3 +114,82 @@ variable "labels" {
   type        = map(string)
   default     = {}
 }
+
+variable "create_masking_policies" {
+  description = "Whether to create the BigQuery direct v2 column data policies and masking routines (terraform/masking.tf)."
+  type        = bool
+  default     = true
+}
+
+variable "taxonomy_location" {
+  description = "Deprecated name retained for compatibility. Location for direct data policies and masking routines. Leave blank to follow bigquery_location; it must match the protected tables' location."
+  type        = string
+  default     = ""
+}
+
+variable "masking_routine_dataset" {
+  description = "Dataset that holds the masking UDF routines (mask_with_asterisk, mask_with_hash). Defaults to bigquery_dataset if left blank. Must already exist."
+  type        = string
+  default     = ""
+}
+
+variable "masking_masked_grantees" {
+  description = "Default grantees for every masking policy (they see masked values). Use IAM v2 principal identifiers: \"principalSet://goog/group/analysts@example.com\", \"principal://goog/subject/alice@example.com\", or \"principal://iam.googleapis.com/projects/-/serviceAccounts/sa@proj.iam.gserviceaccount.com\". Override per policy with masking_policies[*].grantees."
+  type        = list(string)
+  default     = []
+}
+
+variable "masking_raw_grantees" {
+  description = "Principals allowed to read original (unmasked) values, in IAM v2 principal format (see masking_masked_grantees). The dbt runner service account is added automatically when grant_dbt_runner_raw_access is true."
+  type        = list(string)
+  default     = []
+}
+
+variable "grant_dbt_runner_raw_access" {
+  description = "Add the dbt runner service account to raw_pii_v2 so downstream models can read masked upstream columns. The dbt post-hook re-applies masking to those columns in the downstream tables."
+  type        = bool
+  default     = true
+}
+
+variable "masking_policies" {
+  description = <<-EOT
+    Masking data policies to create. The map key is the name dbt models use in
+    `config.meta.mask_policy`; the BigQuery policy ID is `mask_<key>_v2`.
+    Set exactly one of:
+      routine               - a custom STRING-only UDF from masking.tf (mask_with_asterisk, mask_with_hash)
+      predefined_expression - SHA256, ALWAYS_NULL, DEFAULT_MASKING_VALUE, LAST_FOUR_CHARACTERS,
+                              EMAIL_MASK, DATE_YEAR_MASK, RANDOM_HASH
+    grantees (optional) overrides masking_masked_grantees for that policy.
+  EOT
+  type = map(object({
+    routine               = optional(string)
+    predefined_expression = optional(string)
+    grantees              = optional(list(string))
+  }))
+  default = {
+    asterisk  = { routine = "mask_with_asterisk" }
+    hash      = { routine = "mask_with_hash" }
+    sha256    = { predefined_expression = "SHA256" }
+    email     = { predefined_expression = "EMAIL_MASK" }
+    last_four = { predefined_expression = "LAST_FOUR_CHARACTERS" }
+    nullify   = { predefined_expression = "ALWAYS_NULL" }
+    default   = { predefined_expression = "DEFAULT_MASKING_VALUE" }
+    year_only = { predefined_expression = "DATE_YEAR_MASK" }
+  }
+
+  validation {
+    condition = alltrue([
+      for k, p in var.masking_policies :
+      (p.routine == null) != (p.predefined_expression == null) && can(regex("^[a-z][a-z0-9_]*$", k))
+    ])
+    error_message = "Each masking_policies entry needs exactly one of routine or predefined_expression, and keys must be lowercase snake_case."
+  }
+
+  validation {
+    condition = alltrue([
+      for p in values(var.masking_policies) :
+      p.routine == null || contains(["mask_with_asterisk", "mask_with_hash"], coalesce(p.routine, "x"))
+    ])
+    error_message = "routine must be one of the UDFs defined in masking.tf: mask_with_asterisk, mask_with_hash."
+  }
+}

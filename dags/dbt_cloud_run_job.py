@@ -40,7 +40,7 @@ from airflow.providers.google.cloud.operators.cloud_run import CloudRunExecuteJo
 # Matches the values in terraform/terraform.tfvars / terraform outputs.
 # Override via Airflow Variables if you deploy the job under different
 # names/regions/projects without touching this file.
-PROJECT_ID = Variable.get("dbt_runner_gcp_project_id", default_var="project-f1a437dd-d0f2-4e89-be8")
+PROJECT_ID = Variable.get("dbt_runner_gcp_project_id", default_var="project-fd305953-166e-42aa-8d5")
 REGION = Variable.get("dbt_runner_region", default_var="asia-southeast1")
 JOB_NAME = Variable.get("dbt_runner_job_name", default_var="dbt-runner")
 JOB_TIMEOUT_SECONDS = int(Variable.get("dbt_runner_job_timeout_seconds", default_var="3600"))
