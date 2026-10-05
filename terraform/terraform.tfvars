@@ -39,9 +39,11 @@ composer_service_account = ""
 # masking_raw_grantees, otherwise downstream models (e.g. customer_copy) fail
 # with "does not have masked access or raw data access".
 masking_masked_grantees = [
-  # "principal://goog/subject/vishnu.as.automate1@gmail.com",
+  "principal://goog/subject/vishnu.as.automate1@gmail.com",
 ]
 masking_raw_grantees = [
-  "principal://goog/subject/vishnu.as.automate1@gmail.com",
+  # Moved to masking_masked_grantees to test masked reads. An account in both
+  # lists sees raw values, so keep it in only one.
+  # "principal://goog/subject/vishnu.as.automate1@gmail.com",
   # "principal://goog/subject/<account that runs dbt locally>",
 ]
