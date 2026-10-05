@@ -22,15 +22,34 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
 
+# BigQuery dynamic column masking (macros/masking.sql).
+# mask_data_policies maps the `mask_policy` names used in model YAML
+# (columns[].config.meta.mask_policy) to direct v2 data-policy IDs created by
+# terraform/masking.tf (`terraform output dbt_masking_vars`). Bare IDs are
+# resolved against target.project / target.location, so the same values work in
+# every environment; a full "<project>.region-<location>.<id>" also works.
+vars:
+  masking_enabled: true             # set false (--vars) to skip attaching policies
+  mask_inherit_from_parents: true   # re-apply upstream masks to same-named downstream columns
+  mask_data_policies:
+    asterisk: mask_asterisk_v2
+    hash: mask_hash_v2
+    sha256: mask_sha256_v2
+    email: mask_email_v2
+    last_four: mask_last_four_v2
+    nullify: mask_nullify_v2
+    default: mask_default_v2
+    year_only: mask_year_only_v2
+  raw_data_policy: raw_pii_v2
 
-# Configuring models
-# Full documentation: https://docs.getdbt.com/docs/configuring-models
-
-# In this example config, we tell dbt to build all models in the example/
-# directory as views. These settings can be overridden in the individual model
-# files using the `{{ config(...) }}` macro.
 models:
   vis_dbt:
-    # Config indicated by + and applies to all files under models/example/
-    example:
-      +materialized: view
+    # Attaches BigQuery data policies to columns marked with mask_policy in YAML
+    # (and to columns inheriting a mask from an upstream model).
+    +post-hook: "{{ apply_column_masks() }}"
+
+seeds:
+  vis_dbt:
+    +post-hook: "{{ apply_column_masks() }}"
+
+# Add the same post-hook under `snapshots:` once the project has snapshots.

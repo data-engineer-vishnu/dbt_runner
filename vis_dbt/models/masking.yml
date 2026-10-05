@@ -1,0 +1,54 @@
+version: 2
+
+# Column masking is declared here and applied by macros/masking.sql.
+#   config.meta.mask_policy: <name>   -> one of the keys in vars.mask_data_policies
+#   config.meta.mask_policy: none     -> explicitly unmasked (also blocks inheritance)
+# Masked models must be tables (or incremental/snapshot/seed), not views.
+
+models:
+  - name: customer
+    description: "Fictional customer records used to demonstrate BigQuery dynamic data masking."
+    columns:
+      - name: customer_id
+        description: "Synthetic customer identifier."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: full_name
+        description: "Fictional customer name; dynamically redacted for masked readers."
+        config:
+          meta:
+            mask_policy: asterisk
+
+      - name: email
+        description: "Fictional email address; dynamically redacted for masked readers."
+        config:
+          meta:
+            mask_policy: asterisk
+
+      - name: phone_number
+        description: "Fictional phone number; dynamically redacted for masked readers."
+        config:
+          meta:
+            mask_policy: hash
+
+      - name: national_id
+        description: "Fictional identifier; dynamically redacted for masked readers."
+        config:
+          meta:
+            mask_policy: hash
+
+      - name: city
+        description: "Non-sensitive customer location."
+
+  - name: customer_copy
+    description: >
+      Copy of customer. full_name, phone_number and national_id inherit their
+      masks from customer automatically; email is overridden below.
+    columns:
+      - name: email
+        description: "Shown as XXXXX@domain to masked readers (predefined EMAIL_MASK)."
+        config:
+          meta:
+            mask_policy: email

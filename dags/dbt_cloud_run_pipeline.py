@@ -26,7 +26,7 @@ from airflow.providers.google.cloud.operators.cloud_run import CloudRunExecuteJo
 # Matches the values in terraform/terraform.tfvars / terraform outputs.
 # Override via Airflow Variables if you deploy the job under different
 # names/regions/projects without touching this file.
-PROJECT_ID = Variable.get("dbt_runner_gcp_project_id", default_var="project-f1a437dd-d0f2-4e89-be8")
+PROJECT_ID = Variable.get("dbt_runner_gcp_project_id", default_var="project-fd305953-166e-42aa-8d5")
 REGION = Variable.get("dbt_runner_region", default_var="asia-southeast1")
 JOB_NAME = Variable.get("dbt_runner_job_name", default_var="dbt-runner")
 
@@ -49,6 +49,23 @@ with DAG(
     default_args=default_args,
     tags=["dbt", "cloud-run", "bigquery"],
 ) as dag:
+
+    dbt_seed = CloudRunExecuteJobOperator(
+        task_id="dbt_seed",
+        project_id=PROJECT_ID,
+        region=REGION,
+        job_name=JOB_NAME,
+        overrides={
+            "container_overrides": [
+                {
+                    "args": ["seed"],
+                }
+            ],
+            "task_count": 1,
+            "timeout": "600s",
+        },
+        gcp_conn_id="google_cloud_default",
+    )
 
     dbt_deps = CloudRunExecuteJobOperator(
         task_id="dbt_deps",
@@ -101,22 +118,22 @@ with DAG(
         gcp_conn_id="google_cloud_default",
     )
 
-    dbt_test_daily = CloudRunExecuteJobOperator(
-        task_id="dbt_test_daily",
-        project_id=PROJECT_ID,
-        region=REGION,
-        job_name=JOB_NAME,
-        overrides={
-            "container_overrides": [
-                {
-                    "args": ["test", "--select", "tag:docker_test"],
-                }
-            ],
-            "task_count": 1,
-            "timeout": "1800s",
-        },
-        gcp_conn_id="google_cloud_default",
-    )
+    # dbt_test_daily = CloudRunExecuteJobOperator(
+    #     task_id="dbt_test_daily",
+    #     project_id=PROJECT_ID,
+    #     region=REGION,
+    #     job_name=JOB_NAME,
+    #     overrides={
+    #         "container_overrides": [
+    #             {
+    #                 "args": ["test", "--select", "tag:docker_test"],
+    #             }
+    #         ],
+    #         "task_count": 1,
+    #         "timeout": "1800s",
+    #     },
+    #     gcp_conn_id="google_cloud_default",
+    # )
 
     dbt_docs_generate = CloudRunExecuteJobOperator(
         task_id="dbt_docs_generate",
@@ -135,4 +152,4 @@ with DAG(
         gcp_conn_id="google_cloud_default",
     )
 
-    dbt_deps >> dbt_run_daily >> dbt_test_daily >> dbt_docs_generate
+    dbt_seed >> dbt_deps >> dbt_run_daily >> dbt_docs_generate

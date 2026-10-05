@@ -1,4 +1,4 @@
-
+{{ config(materialized='table') }}
 -- Demonstrates consuming the `execution_date` var passed on the CLI
 -- (e.g. `dbt run --vars "{execution_date: 2026-08-02}"`).
 -- Falls back to the run's start date if execution_date isn't supplied.
