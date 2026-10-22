@@ -1,10 +1,10 @@
 resource "google_bigquery_routine" "is_valid_cusip" {
-  project         = var.project_id
-  dataset_id      = var.bigquery_dataset
-  routine_id      = "is_valid_cusip"
-  routine_type    = "SCALAR_FUNCTION"
-  language        = "SQL"
-  description     = "Validates whether a given string is a valid CUSIP number using the Modulus 10 check-digit algorithm."
+  project      = var.project_id
+  dataset_id   = var.bigquery_dataset
+  routine_id   = "is_valid_cusip"
+  routine_type = "SCALAR_FUNCTION"
+  language     = "SQL"
+  description  = "Validates whether a given string is a valid CUSIP number using the Modulus 10 check-digit algorithm."
 
   arguments {
     name          = "cusip"
