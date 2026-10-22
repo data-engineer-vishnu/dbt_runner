@@ -98,7 +98,7 @@ variable "max_retries" {
 }
 
 variable "composer_service_account" {
-  description = "Email of the Cloud Composer/Airflow environment service account that should be allowed to trigger executions of this job (granted roles/run.invoker). Leave blank to skip the binding and manage it elsewhere."
+  description = "Only for an EXTERNAL Composer/Airflow environment (create_composer = false): its service account email, used by the commented-out job-level bindings in main.tf. composer.tf grants its own SA what it needs."
   type        = string
   default     = ""
 }
@@ -192,4 +192,176 @@ variable "masking_policies" {
     ])
     error_message = "routine must be one of the UDFs defined in masking.tf: mask_with_asterisk, mask_with_hash."
   }
+}
+
+# ---------------------------------------------------------------------------
+# Cloud Composer (composer.tf)
+# ---------------------------------------------------------------------------
+variable "create_composer" {
+  description = "Create the Cloud Composer 3 (Airflow) environment, its service account, bucket and IAM. Composer bills continuously; set false to remove it."
+  type        = bool
+  default     = true
+}
+
+variable "composer_environment_name" {
+  description = "Cloud Composer environment name."
+  type        = string
+  default     = "dbt-airflow"
+}
+
+variable "composer_image_version" {
+  description = "Composer image. The alias picks the latest Composer 3 / Airflow 2 build at create time; pin e.g. \"composer-3-airflow-2.10.5\" if you need repeatability."
+  type        = string
+  default     = "composer-3-airflow-2"
+}
+
+variable "composer_service_account_id" {
+  description = "Account ID (not email) of the Airflow runtime service account."
+  type        = string
+  default     = "composer-airflow"
+}
+
+variable "composer_bucket_name" {
+  description = "Environment bucket (dags/, plugins/, data/, logs/). Defaults to <project_id>-<composer_environment_name>."
+  type        = string
+  default     = ""
+}
+
+variable "composer_bucket_force_destroy" {
+  description = "Allow terraform destroy to delete the bucket even if it still holds DAGs/logs."
+  type        = bool
+  default     = false
+}
+
+variable "composer_upload_dags" {
+  description = "Upload ../dags/*.py to the environment bucket's dags/ folder."
+  type        = bool
+  default     = true
+}
+
+variable "composer_users" {
+  description = "Principals (e.g. \"user:alice@example.com\", \"group:data@example.com\") granted roles/composer.user (Airflow UI) and objectAdmin on the environment bucket (DAG uploads)."
+  type        = list(string)
+  default     = []
+}
+
+# Workload sizes default to the Composer 3 minimums.
+variable "composer_scheduler" {
+  description = "Scheduler size (Composer 3 min: 0.5 vCPU, 1 GB)."
+  type        = object({ cpu = number, memory_gb = number, storage_gb = number })
+  default     = { cpu = 0.5, memory_gb = 1, storage_gb = 1 }
+}
+
+variable "composer_dag_processor" {
+  description = "DAG processor size (Composer 3 min: 0.5 vCPU, 1 GB)."
+  type        = object({ cpu = number, memory_gb = number, storage_gb = number })
+  default     = { cpu = 0.5, memory_gb = 1, storage_gb = 1 }
+}
+
+variable "composer_web_server" {
+  description = "Web server size (Composer 3 min: 1 vCPU, 2 GB)."
+  type        = object({ cpu = number, memory_gb = number, storage_gb = number })
+  default     = { cpu = 1, memory_gb = 2, storage_gb = 1 }
+}
+
+variable "composer_worker" {
+  description = "Worker size and autoscaling range (Composer 3 min: 0.5 vCPU, 1 GB, 1 worker)."
+  type        = object({ cpu = number, memory_gb = number, storage_gb = number, min_count = number, max_count = number })
+  default     = { cpu = 0.5, memory_gb = 1, storage_gb = 1, min_count = 1, max_count = 1 }
+}
+
+variable "composer_data_buckets" {
+  description = "Existing bucket names (no gs://) the Airflow SA may read and write, e.g. the input/output buckets of the gcs_unzip_files DAG."
+  type        = list(string)
+  default     = []
+}
+
+# ---------------------------------------------------------------------------
+# Data bucket (storage.tf)
+# ---------------------------------------------------------------------------
+variable "create_data_bucket" {
+  description = "Create the general-purpose data bucket in storage.tf."
+  type        = bool
+  default     = true
+}
+
+variable "data_bucket_name" {
+  description = "Data bucket name (globally unique). Defaults to <project_id>-data."
+  type        = string
+  default     = ""
+}
+
+variable "data_bucket_admins" {
+  description = "Principals granted roles/storage.admin on the data bucket, e.g. \"user:alice@example.com\". The Airflow SA is added automatically when create_composer is true."
+  type        = list(string)
+  default     = []
+}
+
+variable "data_bucket_versioning" {
+  description = "Keep previous object versions (deleted after 30 days) so overwrites/deletes can be recovered."
+  type        = bool
+  default     = true
+}
+
+variable "data_bucket_force_destroy" {
+  description = "Allow terraform destroy to delete the bucket even when it still contains objects."
+  type        = bool
+  default     = false
+}
+
+# ---------------------------------------------------------------------------
+# bq-exporter Cloud Run Job (bq_exporter.tf)
+# ---------------------------------------------------------------------------
+variable "bq_exporter_job_name" {
+  description = "Name of the BigQuery -> GCS export Cloud Run Job."
+  type        = string
+  default     = "bq-exporter"
+}
+
+variable "bq_exporter_service_account_id" {
+  description = "Account ID (not email) of the bq-exporter runtime service account."
+  type        = string
+  default     = "bq-exporter"
+}
+
+variable "bq_exporter_source_datasets" {
+  description = "Dataset IDs in project_id whose tables the job may export (roles/bigquery.dataViewer)."
+  type        = list(string)
+  default     = []
+}
+
+variable "bq_exporter_output_buckets" {
+  description = "Extra bucket names (no gs://) the job may write files to. The data bucket from storage.tf is added automatically."
+  type        = list(string)
+  default     = []
+}
+
+variable "bq_exporter_impersonate_service_accounts" {
+  description = "Service account emails the job may impersonate (roles/iam.serviceAccountTokenCreator), i.e. the impersonation_service_account values used in the DAG YAML files."
+  type        = list(string)
+  default     = []
+}
+
+variable "bq_exporter_cpu" {
+  description = "CPU limit for the bq-exporter container."
+  type        = string
+  default     = "1"
+}
+
+variable "bq_exporter_memory" {
+  description = "Memory limit for the bq-exporter container. The export runs inside BigQuery, so this stays small."
+  type        = string
+  default     = "512Mi"
+}
+
+variable "bq_exporter_task_timeout" {
+  description = "Per-task timeout, e.g. \"1800s\"."
+  type        = string
+  default     = "1800s"
+}
+
+variable "bq_exporter_max_retries" {
+  description = "Max retries per task execution."
+  type        = number
+  default     = 0
 }

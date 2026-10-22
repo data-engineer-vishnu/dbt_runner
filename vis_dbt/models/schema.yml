@@ -31,3 +31,9 @@ models:
         description: "The execution_date passed via --vars, or the run's start date if not supplied"
         data_tests:
           - not_null
+
+  - name: customer_as_string
+    description: "customer with every column cast to STRING (macros/cast_columns_to_string.sql). Masks are inherited from customer."
+
+  - name: churners_quoted
+    description: "churners with every value wrapped in double quotes (macros/quote_column_values.sql)."

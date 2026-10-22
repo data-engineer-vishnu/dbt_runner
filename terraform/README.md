@@ -101,3 +101,50 @@ recreated. `terraform plan` should show only new policies being created and
 - For incremental models and snapshots, removing `mask_policy` from YAML does
   not detach an existing policy; run a `--full-refresh` or detach it manually.
 - Never attach a legacy policy tag and a direct data policy to the same column.
+
+## Cloud Composer (Airflow)
+
+`composer.tf` creates a Composer 3 / Airflow 2 environment (`dbt-airflow`) at
+the smallest sizes Composer 3 allows, to run the DAGs in `../dags`:
+
+| component | size |
+|---|---|
+| scheduler | 1 × 0.5 vCPU, 1 GB |
+| DAG processor | 1 × 0.5 vCPU, 1 GB |
+| web server | 1 vCPU, 2 GB |
+| workers | 1 × 0.5 vCPU, 1 GB (min 1, max 1) |
+| triggerer | none |
+
+Override any of these with `composer_scheduler`, `composer_dag_processor`,
+`composer_web_server` and `composer_worker`. Composer cannot scale to zero, so
+it bills continuously; set `create_composer = false` and apply to remove it.
+
+It also creates:
+
+- **`composer-airflow` service account** (the Airflow identity and the
+  `google_cloud_default` connection used by the DAGs), with:
+  - `roles/composer.worker`: required for any Composer environment SA
+  - `roles/run.jobsExecutorWithOverrides`: run the dbt-runner job with arg overrides
+  - `roles/run.viewer`: poll the execution until it finishes
+  - `roles/logging.viewer`: needed only for `verbose=True` log streaming
+  - `roles/storage.objectAdmin` on the environment bucket
+- **Environment bucket** `<project_id>-dbt-airflow`, with uniform access and
+  public access blocked. The DAGs in `../dags/*.py` are uploaded to `dags/` on
+  every apply.
+- **`roles/composer.ServiceAgentV2Ext`** for the Cloud Composer service agent,
+  required when an environment uses a user-managed SA.
+- Airflow Variables `dbt_runner_gcp_project_id`, `dbt_runner_region` and
+  `dbt_runner_job_name`, set via `AIRFLOW_VAR_*` environment variables.
+- Optional `composer_users` (for example `"user:you@example.com"`) get
+  `roles/composer.user` for the Airflow UI, plus write access to the bucket.
+
+Creating the environment takes about 20–30 minutes:
+
+```sh
+terraform apply
+terraform output composer_airflow_uri
+```
+
+The DAGs execute the Cloud Run Job named `job_name` (`dbt-runner`). Its
+Terraform resource is still commented out in `main.tf`, so the job must exist
+before a DAG run succeeds.

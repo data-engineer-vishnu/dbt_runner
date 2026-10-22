@@ -1,0 +1,75 @@
+version: 2
+
+# Raw tables loaded into BigQuery outside dbt. Reference them in models with
+# {{ source('<source name>', '<table name>') }}, e.g. source('bank', 'bank_churners').
+
+sources:
+  - name: bank
+    description: "Credit card customer data loaded into BigQuery outside dbt."
+    database: "{{ target.project }}"
+    schema: dev_vishnu
+    tables:
+      - name: bank_churners
+        description: "One row per credit card customer, with demographics, account activity and whether the customer churned."
+        columns:
+          - name: CLIENTNUM
+            description: "Unique customer identifier."
+            data_tests:
+              - not_null
+              - unique
+          - name: Attrition_Flag
+            description: "Whether the customer is still active or has closed the account."
+            data_tests:
+              - accepted_values:
+                  arguments:
+                    values: ["Existing Customer", "Attrited Customer"]
+          - name: Customer_Age
+            description: "Customer age in years."
+          - name: Gender
+            description: "M or F."
+            data_tests:
+              - accepted_values:
+                  arguments:
+                    values: ["M", "F"]
+          - name: Dependent_count
+            description: "Number of dependents."
+          - name: Education_Level
+            description: "Highest education level (includes 'Unknown')."
+          - name: Marital_Status
+            description: "Married, Single, Divorced or Unknown."
+          - name: Income_Category
+            description: "Annual income band, e.g. 'Less than $40K', '$120K +' (includes 'Unknown')."
+          - name: Card_Category
+            description: "Card product."
+            data_tests:
+              - accepted_values:
+                  arguments:
+                    values: ["Blue", "Silver", "Gold", "Platinum"]
+          - name: Months_on_book
+            description: "Length of the relationship with the bank, in months."
+          - name: Total_Relationship_Count
+            description: "Number of products held by the customer."
+          - name: Months_Inactive_12_mon
+            description: "Months inactive in the last 12 months."
+          - name: Contacts_Count_12_mon
+            description: "Number of contacts with the bank in the last 12 months."
+          - name: Credit_Limit
+            description: "Credit limit on the card."
+          - name: Total_Revolving_Bal
+            description: "Total revolving balance on the card."
+          - name: Avg_Open_To_Buy
+            description: "Open-to-buy credit line, averaged over the last 12 months."
+          - name: Total_Amt_Chng_Q4_Q1
+            description: "Ratio of transaction amount in Q4 to Q1."
+          - name: Total_Trans_Amt
+            description: "Total transaction amount over the last 12 months."
+          - name: Total_Trans_Ct
+            description: "Total transaction count over the last 12 months."
+          - name: Total_Ct_Chng_Q4_Q1
+            description: "Ratio of transaction count in Q4 to Q1."
+          - name: Avg_Utilization_Ratio
+            description: "Average card utilisation ratio."
+          - name: Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_1
+            description: "Pre-computed Naive Bayes classifier output from the original dataset; not a customer attribute. Usually dropped."
+          - name: Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_2
+            description: "Pre-computed Naive Bayes classifier output from the original dataset; not a customer attribute. Usually dropped."

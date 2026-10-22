@@ -6,8 +6,8 @@ Deploy: copy this file into your Composer/Airflow environment's dags/ folder,
 e.g. `gsutil cp dags/dbt_cloud_run_job.py gs://<composer-bucket>/dags/`.
 
 Requires apache-airflow-providers-google (CloudRunExecuteJobOperator) and the
-environment's service account to have roles/run.invoker on the Cloud Run Job
-(already granted via terraform's `composer_service_account` var).
+environment's service account to have roles/run.jobsExecutorWithOverrides and
+roles/run.viewer (granted to the composer-airflow SA by terraform/composer.tf).
 
 Trigger with config, e.g.:
     {

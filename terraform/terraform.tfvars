@@ -47,3 +47,35 @@ masking_raw_grantees = [
   # "principal://goog/subject/vishnu.as.automate1@gmail.com",
   # "principal://goog/subject/<account that runs dbt locally>",
 ]
+
+# --- Cloud Composer / Airflow (terraform/composer.tf) ------------------------
+# Composer 3, smallest allowed sizes. Bills continuously while it exists;
+# set create_composer = false and apply to remove it.
+create_composer           = true
+composer_environment_name = "dbt-airflow"
+# composer_image_version  = "composer-3-airflow-2"
+# Who can open the Airflow UI and upload DAGs:
+composer_users = [
+  # "user:vishnuas1987@gmail.com",
+]
+# Buckets the DAGs read/write (gcs_unzip_files input + output buckets), no gs:// prefix:
+composer_data_buckets = [
+  # "my-raw-bucket",
+  # "my-curated-bucket",
+]
+
+# --- Data bucket (terraform/storage.tf) --------------------------------------
+create_data_bucket = true
+# data_bucket_name = "project-fd305953-166e-42aa-8d5-data"  # default
+# Full control (roles/storage.admin) on the bucket; Airflow SA is added automatically.
+data_bucket_admins = [
+  "user:vishnuas1987@gmail.com",
+]
+
+# --- bq-exporter Cloud Run Job (terraform/bq_exporter.tf) --------------------
+# Image is built and deployed by bq_exporter/deploy.ps1, not by Terraform.
+bq_exporter_source_datasets = ["dev_vishnu"]
+# Data bucket above is added automatically; list any other output buckets:
+# bq_exporter_output_buckets = []
+# SAs named as impersonation_service_account in the DAG YAML files:
+# bq_exporter_impersonate_service_accounts = []

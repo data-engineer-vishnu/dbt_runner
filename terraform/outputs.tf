@@ -43,3 +43,39 @@ output "dbt_masking_vars" {
     raw_data_policy    = var.create_masking_policies ? google_bigquery_datapolicyv2_data_policy.raw_pii[0].data_policy_id : null
   }
 }
+
+output "composer_service_account_email" {
+  description = "Airflow runtime service account."
+  value       = var.create_composer ? google_service_account.composer[0].email : null
+}
+
+# Uncomment together with google_composer_environment.airflow in composer.tf.
+# output "composer_airflow_uri" {
+#   description = "Airflow web UI."
+#   value       = var.create_composer ? google_composer_environment.airflow[0].config[0].airflow_uri : null
+# }
+#
+# output "composer_dag_gcs_prefix" {
+#   description = "Upload DAGs here, e.g. gcloud storage cp dags/*.py <prefix>/"
+#   value       = var.create_composer ? google_composer_environment.airflow[0].config[0].dag_gcs_prefix : null
+# }
+
+output "data_bucket" {
+  description = "Data bucket URI."
+  value       = var.create_data_bucket ? "gs://${google_storage_bucket.data[0].name}" : null
+}
+
+output "bq_exporter_job_name" {
+  description = "bq-exporter Cloud Run Job name, for CloudRunExecuteJobOperator and deploy.ps1."
+  value       = google_cloud_run_v2_job.bq_exporter.name
+}
+
+output "bq_exporter_image" {
+  description = "Image path deploy.ps1 pushes to (tagged per deploy)."
+  value       = "${var.region}-docker.pkg.dev/${var.project_id}/${var.repository_id}/bq-exporter"
+}
+
+output "bq_exporter_service_account_email" {
+  description = "Runtime service account of the bq-exporter job."
+  value       = google_service_account.bq_exporter.email
+}

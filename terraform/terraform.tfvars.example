@@ -47,3 +47,16 @@ masking_raw_grantees    = ["principalSet://goog/group/pii-readers@example.com"]
 #   email    = { predefined_expression = "EMAIL_MASK" }
 #   nullify  = { predefined_expression = "ALWAYS_NULL", grantees = ["principalSet://goog/group/support@example.com"] }
 # }
+
+# --- Cloud Composer / Airflow (terraform/composer.tf) ------------------------
+create_composer           = true
+composer_environment_name = "dbt-airflow"
+# composer_image_version  = "composer-3-airflow-2"
+# composer_users          = ["group:data-eng@example.com"]
+# composer_worker         = { cpu = 0.5, memory_gb = 1, storage_gb = 1, min_count = 1, max_count = 1 }
+
+# --- bq-exporter Cloud Run Job (terraform/bq_exporter.tf) --------------------
+# Image is built and deployed by bq_exporter/deploy.ps1, not by Terraform.
+bq_exporter_source_datasets = ["analytics"]
+# bq_exporter_output_buckets = ["my-export-bucket"]
+# bq_exporter_impersonate_service_accounts = ["bq-reader@my-project.iam.gserviceaccount.com"]

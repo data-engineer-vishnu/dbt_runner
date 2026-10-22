@@ -1,0 +1,11 @@
+[
+  {
+    "input_location": "gs://project-fd305953-166e-42aa-8d5-data/input/two/books.zip",
+    "output_location": "project-fd305953-166e-42aa-8d5-data/target/one/"
+  },
+  {
+    "input_location": "gs://project-fd305953-166e-42aa-8d5-data/input/one/birds.zip",
+    "output_location": "project-fd305953-166e-42aa-8d5-data/target/two/",
+    "overwrite": true
+  }
+]
