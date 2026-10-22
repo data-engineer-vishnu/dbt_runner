@@ -18,6 +18,6 @@ COPY main.py ./
 USER app
 
 # Cloud Run Job / Airflow overrides supply one JSON config, as the single arg
-#   ['{"table_name": "p.d.t", "file_location": "gs://b/x.csv", "delimiter": "|"}']
+#   ['{"export_vendor": "modeA", "table_name": "p.d.t", "file_location": "gs://b/x.csv", "execution_date": "2026-10-22"}']
 # or in the EXPORT_CONFIG env var. See main.py for the keys.
 ENTRYPOINT ["python", "/app/main.py"]

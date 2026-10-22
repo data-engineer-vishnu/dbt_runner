@@ -37,3 +37,6 @@ models:
 
   - name: churners_quoted
     description: "churners with every value wrapped in double quotes (macros/quote_column_values.sql)."
+
+  - name: bank_churners_quoted
+    description: "bank_churners with STRING columns wrapped in double quotes; other columns unchanged (macros/quote_string_columns.sql)."

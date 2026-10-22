@@ -13,63 +13,101 @@ sources:
         description: "One row per credit card customer, with demographics, account activity and whether the customer churned."
         columns:
           - name: CLIENTNUM
+            data_type: INT64
             description: "Unique customer identifier."
             data_tests:
               - not_null
               - unique
           - name: Attrition_Flag
+            data_type: STRING
             description: "Whether the customer is still active or has closed the account."
             data_tests:
               - accepted_values:
                   arguments:
                     values: ["Existing Customer", "Attrited Customer"]
           - name: Customer_Age
+            data_type: INT64
             description: "Customer age in years."
           - name: Gender
+            data_type: STRING
             description: "M or F."
             data_tests:
               - accepted_values:
                   arguments:
                     values: ["M", "F"]
           - name: Dependent_count
+            data_type: INT64
             description: "Number of dependents."
           - name: Education_Level
+            data_type: STRING
             description: "Highest education level (includes 'Unknown')."
           - name: Marital_Status
+            data_type: STRING
             description: "Married, Single, Divorced or Unknown."
           - name: Income_Category
+            data_type: STRING
             description: "Annual income band, e.g. 'Less than $40K', '$120K +' (includes 'Unknown')."
           - name: Card_Category
+            data_type: STRING
             description: "Card product."
             data_tests:
               - accepted_values:
                   arguments:
                     values: ["Blue", "Silver", "Gold", "Platinum"]
           - name: Months_on_book
+            data_type: INT64
             description: "Length of the relationship with the bank, in months."
           - name: Total_Relationship_Count
+            data_type: INT64
             description: "Number of products held by the customer."
           - name: Months_Inactive_12_mon
+            data_type: INT64
             description: "Months inactive in the last 12 months."
           - name: Contacts_Count_12_mon
+            data_type: INT64
             description: "Number of contacts with the bank in the last 12 months."
           - name: Credit_Limit
+            data_type: FLOAT64
+            config:
+              meta:
+                decimal_places: 6
             description: "Credit limit on the card."
           - name: Total_Revolving_Bal
+            data_type: INT64
             description: "Total revolving balance on the card."
           - name: Avg_Open_To_Buy
+            data_type: FLOAT64
+            config:
+              meta:
+                decimal_places: 2
             description: "Open-to-buy credit line, averaged over the last 12 months."
           - name: Total_Amt_Chng_Q4_Q1
+            data_type: FLOAT64
+            config:
+              meta:
+                decimal_places: 3
             description: "Ratio of transaction amount in Q4 to Q1."
           - name: Total_Trans_Amt
+            data_type: INT64
             description: "Total transaction amount over the last 12 months."
           - name: Total_Trans_Ct
+            data_type: INT64
             description: "Total transaction count over the last 12 months."
           - name: Total_Ct_Chng_Q4_Q1
+            data_type: FLOAT64
+            config:
+              meta:
+                decimal_places: 3
             description: "Ratio of transaction count in Q4 to Q1."
           - name: Avg_Utilization_Ratio
+            data_type: FLOAT64
+            config:
+              meta:
+                decimal_places: 6
             description: "Average card utilisation ratio."
           - name: Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_1
+            data_type: FLOAT64
             description: "Pre-computed Naive Bayes classifier output from the original dataset; not a customer attribute. Usually dropped."
           - name: Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_2
+            data_type: FLOAT64
             description: "Pre-computed Naive Bayes classifier output from the original dataset; not a customer attribute. Usually dropped."
